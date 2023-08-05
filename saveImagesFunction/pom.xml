@@ -5,17 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>competency-development</groupId>
-    <artifactId>getImagesFunction</artifactId>
+    <artifactId>saveImagesFunction</artifactId>
     <version>1.0</version>
         <packaging>jar</packaging>
-    <name>GetImages Function for SAM CLI.</name>
+    <name>SaveImages Function for SAM CLI.</name>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <build>
-        <finalName>GetImages</finalName>
+        <finalName>SaveImages</finalName>
     </build>
 
     <dependencyManagement>

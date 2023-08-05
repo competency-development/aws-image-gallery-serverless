@@ -1,4 +1,4 @@
-package images;
+package saveimages;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -6,7 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.AWSXRayRecorderBuilder;
-import com.amazonaws.xray.interceptors.TracingInterceptor;
 import com.amazonaws.xray.strategy.sampling.AllSamplingStrategy;
 
 import com.google.gson.Gson;
@@ -14,11 +13,6 @@ import com.google.gson.GsonBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
-import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.util.HashMap;
 import java.util.Map;
