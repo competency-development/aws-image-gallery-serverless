@@ -1,4 +1,4 @@
-package getimages;
+package com.competencydevelopment.serverless.lambda.getimagesfunction;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;

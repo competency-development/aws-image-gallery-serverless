@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>competency-development</groupId>
-    <artifactId>saveImagesFunction</artifactId>
+    <groupId>com.competencydevelopment.serverless.lambda</groupId>
+    <artifactId>save-images-function</artifactId>
     <version>1.0</version>
         <packaging>jar</packaging>
     <name>SaveImages Function for SAM CLI.</name>
@@ -13,10 +13,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
-
-    <build>
-        <finalName>SaveImages</finalName>
-    </build>
 
     <dependencyManagement>
         <dependencies>

@@ -1,4 +1,4 @@
-package saveimages;
+package com.competencydevelopment.serverless.lambda.saveimagesfunction;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
