@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Course Serverless App
+
+Parameters:
+  EnvironmentType:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+
+Globals:
+  Function:
+    Tracing: Active
+    Timeout: 5
+    MemorySize: 512
+    Runtime: java17
+    Environment:
+      Variables:
+        ENV_TYPE: !Ref EnvironmentType
+    Tags:
+        EnvironmentType: !Ref EnvironmentType
+
+  Api:
+    TracingEnabled: true
+    MethodSettings:
+      - LoggingLevel: INFO
+        ResourcePath: '/*'
+        HttpMethod: '*'
+    
+Resources:
+
+  #FUNCTIONS
+  ImagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentType}-getImages"
+      CodeUri: getImagesFunction
+      Handler: images.Handler::handleRequest
+      Events:
+        ImagesEvent:
+          Type: HttpApi
+          Properties:
+            Method: GET
+            Path: '/images'
+      Environment:
+        Variables:
+          IMAGES_TABLE_NAME: !Sub ${EnvironmentType}-images
+      Policies: 
+        - Version: '2012-10-17'
+          Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGet*
+                  - dynamodb:DescribeTable
+                  - dynamodb:Get*
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EnvironmentType}.*'
+
+# Outputs:
+#   RestApiUrl:
+#     Description: URL of your API endpoint
+#     Value:
+#       Fn::Sub: 'https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${EnvironmentType}/'
