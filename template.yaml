@@ -45,7 +45,28 @@ Globals:
     
 Resources:
 
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    Properties:
+      TableName: !Ref DynamoDBTableName
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: key
+          AttributeType: S
+        - AttributeName: url
+          AttributeType: S
+        - AttributeName: description
+          AttributeType: S
+      KeySchema:
+        - AttributeName: key
+          KeyType: HASH
+
   #FUNCTIONS
+
   GetImagesFunction:
     Type: AWS::Serverless::Function
     Properties:
