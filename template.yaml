@@ -11,6 +11,18 @@ Parameters:
       - dev
       - prod
     Default: dev
+  S3BucketName:
+    Description: S3 bucket name
+    Type: String
+    AllowedValues:
+      - kotsial-images-central
+    Default: kotsial-images-central
+  DynamoDBTableName:
+    Description: DynamoDB table name
+    Type: String
+    AllowedValues:
+      - images
+    Default: images
 
 Globals:
   Function:
@@ -34,12 +46,12 @@ Globals:
 Resources:
 
   #FUNCTIONS
-  ImagesFunction:
+  GetImagesFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${EnvironmentType}-getImages"
       CodeUri: getImagesFunction
-      Handler: images.Handler::handleRequest
+      Handler: com.competencydevelopment.serverless.lambda.getimagesfunction.Handler::handleRequest
       Events:
         ImagesEvent:
           Type: HttpApi
@@ -48,7 +60,7 @@ Resources:
             Path: '/images'
       Environment:
         Variables:
-          IMAGES_TABLE_NAME: !Sub ${EnvironmentType}-images
+          IMAGES_TABLE_NAME: !Ref DynamoDBTableName
       Policies: 
         - Version: '2012-10-17'
           Statement:
@@ -59,7 +71,32 @@ Resources:
                   - dynamodb:Get*
                   - dynamodb:Query
                   - dynamodb:Scan
-                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${EnvironmentType}.*'
+                Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*'
+
+  SaveImagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentType}-saveImages"
+      CodeUri: saveImagesFunction
+      Handler: com.competencydevelopment.serverless.lambda.saveimagesfunction.Handler::handleRequest
+      Events:
+        ImagesEvent:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: '/images/upload'
+      Environment:
+        Variables:
+          IMAGES_TABLE_NAME: !Ref DynamoDBTableName
+          S3_BUCKET_NAME: !Ref S3BucketName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:*
+                - dynamodb:*
+              Resource: "*"
 
 # Outputs:
 #   RestApiUrl:
