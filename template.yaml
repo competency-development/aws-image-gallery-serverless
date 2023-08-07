@@ -77,7 +77,7 @@ Resources:
             Path: '/images'
       Environment:
         Variables:
-          IMAGES_TABLE_NAME: !Ref DynamoDBTableName
+          TABLE_NAME: !Ref DynamoDBTableName
       Policies: 
         - Version: '2012-10-17'
           Statement:
@@ -104,7 +104,7 @@ Resources:
             Path: '/images/upload'
       Environment:
         Variables:
-          IMAGES_TABLE_NAME: !Ref DynamoDBTableName
+          TABLE_NAME: !Ref DynamoDBTableName
           S3_BUCKET_NAME: !Ref S3BucketName
       Policies:
         - Version: '2012-10-17'

@@ -27,7 +27,7 @@ import java.util.UUID;
 
 public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final String TABLE_NAME = System.getenv("IMAGES_TABLE_NAME");
+    private static final String TABLE_NAME = System.getenv("TABLE_NAME");
     private static final String S3_BUCKET_NAME = System.getenv("S3_BUCKET_NAME");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Handler.class);
@@ -95,16 +95,6 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         } finally {
             AWSXRay.endSubsegment();
         }
-    }
-
-    public static void main(String[] args) {
-        AWSXRay.beginSegment("do-startup-operation");
-        DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(DynamoDbClient.builder().build())
-                .build()
-                .table("images", TableSchema.fromBean(Image.class))
-                .putItem(new Image("aa1", "url", null));
-        AWSXRay.endSegment();
     }
 
 }
