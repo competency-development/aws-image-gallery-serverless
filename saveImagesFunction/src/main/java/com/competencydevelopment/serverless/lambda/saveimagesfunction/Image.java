@@ -5,6 +5,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttri
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
+/**
+ * Represents a row for DynamoDB with all mappings. NOTE: setters and default constructor are required!
+ */
 @DynamoDbBean
 public class Image {
 
@@ -15,7 +18,7 @@ public class Image {
     private String description;
 
     public Image() {
-        // required default constructor
+        // default constructor
     }
 
     public Image(String key, String url, String description) {
@@ -42,6 +45,14 @@ public class Image {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

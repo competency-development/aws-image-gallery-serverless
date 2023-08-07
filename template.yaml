@@ -27,7 +27,7 @@ Parameters:
 Globals:
   Function:
     Tracing: Active
-    Timeout: 5
+    Timeout: 10
     MemorySize: 512
     Runtime: java17
     Environment:
@@ -56,10 +56,6 @@ Resources:
         WriteCapacityUnits: 1
       AttributeDefinitions:
         - AttributeName: key
-          AttributeType: S
-        - AttributeName: url
-          AttributeType: S
-        - AttributeName: description
           AttributeType: S
       KeySchema:
         - AttributeName: key
