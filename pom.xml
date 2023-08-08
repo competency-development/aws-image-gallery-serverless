@@ -17,6 +17,7 @@
     <modules>
         <module>getImagesFunction</module>
         <module>saveImagesFunction</module>
+        <module>synthesizeDescription</module>
     </modules>
 
 </project>
