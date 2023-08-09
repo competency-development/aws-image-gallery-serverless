@@ -146,6 +146,33 @@ Resources:
                 - polly:*
               Resource: "*"
 
+  GenerateImageDescription:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentType}-generateImageDescription"
+      CodeUri: generateImageDescription
+      Handler: com.competencydevelopment.serverless.lambda.generateimagedescription.Handler::handleRequest
+      Events:
+        ImagesEvent:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: '/recognize'
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref DynamoDBTableName
+          S3_BUCKET_NAME: !Ref S3ImagesBucketName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:*Object
+                - dynamodb:*
+                - rekognition:DetectLabels
+              Resource: "*"
+
 # Outputs:
 #   RestApiUrl:
 #     Description: URL of your API endpoint

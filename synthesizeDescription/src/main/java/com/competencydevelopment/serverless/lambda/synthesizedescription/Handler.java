@@ -1,6 +1,5 @@
 package com.competencydevelopment.serverless.lambda.synthesizedescription;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -15,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.polly.PollyClient;
 import software.amazon.awssdk.services.polly.model.OutputFormat;
 import software.amazon.awssdk.services.polly.model.SynthesizeSpeechRequest;
@@ -32,7 +30,6 @@ import java.util.Map;
 
 public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final String TABLE_NAME = System.getenv("TABLE_NAME");
     private static final String S3_BUCKET_NAME = System.getenv("S3_BUCKET_NAME");
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Handler.class);
@@ -99,10 +96,10 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
                     .build();
 
             return polly.synthesizeSpeech(synthReq);
-        }catch (Exception e) {
+        } catch (Exception e) {
             subsegment.addException(e);
             throw e;
-        }finally {
+        } finally {
             AWSXRay.endSubsegment();
         }
     }
