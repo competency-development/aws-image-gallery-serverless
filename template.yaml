@@ -11,12 +11,18 @@ Parameters:
       - dev
       - prod
     Default: dev
-  S3BucketName:
-    Description: S3 bucket name
+  S3ImagesBucketName:
+    Description: S3 images bucket name
     Type: String
     AllowedValues:
       - kotsial-images-central
     Default: kotsial-images-central
+  S3AudioBucketName:
+    Description: S3 audio bucket name
+    Type: String
+    AllowedValues:
+      - kotsial-mpegs-central
+    Default: kotsial-mpegs-central
   DynamoDBTableName:
     Description: DynamoDB table name
     Type: String
@@ -105,7 +111,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref DynamoDBTableName
-          S3_BUCKET_NAME: !Ref S3BucketName
+          S3_BUCKET_NAME: !Ref S3ImagesBucketName
       Policies:
         - Version: '2012-10-17'
           Statement:
@@ -113,6 +119,58 @@ Resources:
               Action:
                 - s3:*
                 - dynamodb:*
+              Resource: "*"
+
+  SynthesizeDescription:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentType}-synthesizeDescription"
+      CodeUri: synthesizeDescription
+      Handler: com.competencydevelopment.serverless.lambda.synthesizedescription.Handler::handleRequest
+      Events:
+        ImagesEvent:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: '/synthesize'
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref S3AudioBucketName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:*Object
+                - polly:*
+              Resource: "*"
+
+  GenerateImageDescription:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${EnvironmentType}-generateImageDescription"
+      CodeUri: generateImageDescription
+      Handler: com.competencydevelopment.serverless.lambda.generateimagedescription.Handler::handleRequest
+      Events:
+        ImagesEvent:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: '/recognize'
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref DynamoDBTableName
+          S3_BUCKET_NAME: !Ref S3ImagesBucketName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:*Object
+                - dynamodb:*
+                - rekognition:DetectLabels
               Resource: "*"
 
 # Outputs:
