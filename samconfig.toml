@@ -1,11 +1,11 @@
 version = 0.1
 [default.deploy.parameters]
-stack_name = "course-api"
+stack_name = "aws-demo-serverless"
 resolve_s3 = true
-s3_prefix = "course-api"
+s3_prefix = "aws-demo-serverless"
 region = "eu-central-1"
 profile = "aws_cource"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "EnvironmentType=\"dev\""
+parameter_overrides = "EnvironmentType=\"dev\" S3ImagesBucketName=\"kotsial-images-central\" S3AudioBucketName=\"kotsial-mpegs-central\" DynamoDBTableName=\"images\""
 image_repositories = []

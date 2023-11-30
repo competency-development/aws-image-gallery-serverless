@@ -7,14 +7,22 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.AWSXRayRecorderBuilder;
 import com.amazonaws.xray.entities.Subsegment;
+import com.amazonaws.xray.interceptors.TracingInterceptor;
 import com.amazonaws.xray.strategy.sampling.AllSamplingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -38,34 +46,22 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         try {
             LOGGER.info("Environment: {}", GSON.toJson(System.getenv()));
             LOGGER.info("Event: {}", GSON.toJson(event));
-
-            // var client = DynamoDbAsyncClient.builder()
-            //         .overrideConfiguration(ClientOverrideConfiguration.builder()
-            //                 .addExecutionInterceptor(new TracingInterceptor())
-            //                 .build())
-            //         .build();
-
-            var tableName = System.getenv("IMAGES_TABLE_NAME");
-//      var attributes = new HashMap<String, AttributeValue>();
-            var userName = getUserFromEvent(event);
-            subsegment.putAnnotation("UserId", userName);
-
             LOGGER.info("body: {}", GSON.toJson(event.getBody()));
-            // var note = gson.fromJson(event.getBody(), Note.class);
-//      attributes.put("UserId", AttributeValue.builder().s(userName).build());
-//      attributes.put("NoteId", AttributeValue.builder().n(note.getNoteId()).build());
-//      attributes.put("Note", AttributeValue.builder().s(note.getNote()).build());
 
-            // var request = PutItemRequest.builder()
-            //         .tableName(tableName)
-            //        .item(attributes)
-            //         .build();
+            DynamoDbClient client = DynamoDbClient.builder()
+                     .overrideConfiguration(ClientOverrideConfiguration.builder()
+                             .addExecutionInterceptor(new TracingInterceptor())
+                             .build())
+                     .build();
 
-            // client.putItem(request).join();
+            String tableName = System.getenv("TABLE_NAME");
+            ScanResponse imagesResponse = client.scan(ScanRequest.builder().tableName(tableName).attributesToGet("url").build());
+            List<String> listOfImages = imagesResponse.items().stream().flatMap(m -> m.values().stream().map(AttributeValue::s)).collect(Collectors.toList());
+
             response = new APIGatewayProxyResponseEvent().withStatusCode(200)
                     .withHeaders(HEADERS)
                     .withIsBase64Encoded(false)
-                    .withBody("Hello from Lambda!");
+                    .withBody(GSON.toJson(listOfImages));
 
         } catch (Exception e) {
             subsegment.addException(e);
