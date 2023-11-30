@@ -62,7 +62,7 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         Subsegment subsegment = AWSXRay.beginSubsegment("Save Image to S3");
         try (S3Client s3Client = S3Client.builder().build()) {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(S3_BUCKET_NAME).key(key).build();
-            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(Base64.decodeBase64(fileBytes)));
 
             GetUrlRequest getUrlRequest = GetUrlRequest.builder().bucket(S3_BUCKET_NAME).key(key).build();
             String imageUrl = s3Client.utilities().getUrl(getUrlRequest).toString();
