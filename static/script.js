@@ -98,7 +98,7 @@ $(document).ready(function () {
       pollyData.append("text", text);
       post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/synthesize', pollyData, function (data) {
         parent.find(".hover-buttons").toggle();
-        parent.find('.audio').addClass('appear-animation').append('<audio id="audio" src="' + data + '" controls></audio>').toggle();
+        parent.find('.audio').addClass('appear-animation').append('<audio id="audio" src="' + data.body + '" controls></audio>').toggle();
       });
     });
   }
