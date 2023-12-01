@@ -48,22 +48,21 @@ body {
 	width: 100%;
 }
 
-.close:focus,
 .close:active,
 .close:focus,
 .navbar-toggler:focus,
 .navbar-toggler:active,
 .navbar-toggler-icon:focus,
-.info-button:focus,
+.navbar-toggler-icon:active,
 .info-button:active,
 .info-button:focus,
-.play-button:focus,
 .play-button:active,
 .play-button:focus,
-.delete-button:focus,
 .delete-button:active,
-.delete-button:focus {
-	outline: none;
+.delete-button:focus,
+.btn-close:focus,
+.btn-close:active {
+	outline: none !important;
 	box-shadow: none;
 }
 

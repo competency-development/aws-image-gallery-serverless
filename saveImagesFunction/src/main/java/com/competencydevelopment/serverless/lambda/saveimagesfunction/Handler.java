@@ -21,6 +21,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -45,30 +48,35 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
-        String imageName = UUID.randomUUID().toString();
-
-        String imageUrl = saveBytesToS3(imageName, event.getBody().getBytes());
-
-        Image image = new Image(imageName, imageUrl, null);
-        saveToDynamoDb(image);
-
-        return new APIGatewayProxyResponseEvent().withStatusCode(200)
-                .withHeaders(HEADERS)
-                .withIsBase64Encoded(false)
-                .withBody(GSON.toJson(image));
+        try{
+            String imageName = UUID.randomUUID().toString();
+            String imageUrl = saveBytesToS3(imageName, event.getBody().getBytes());
+            Image image = new Image(imageName, imageUrl, null);
+            saveToDynamoDb(image);
+            return new APIGatewayProxyResponseEvent().withStatusCode(200)
+                    .withHeaders(HEADERS)
+                    .withIsBase64Encoded(false)
+                    .withBody(GSON.toJson(image));
+        } catch(Exception e){
+            LOGGER.error("Exception during handleRequest: {}", e.toString());
+            return new APIGatewayProxyResponseEvent().withStatusCode(500);
+        }
     }
 
-    private String saveBytesToS3(String key, byte[] fileBytes) {
+    private String saveBytesToS3(String key, byte[] fileBytes) throws Exception {
         Subsegment subsegment = AWSXRay.beginSubsegment("Save Image to S3");
         try (S3Client s3Client = S3Client.builder().build()) {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(S3_BUCKET_NAME).key(key).build();
-            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(Base64.decodeBase64(fileBytes)));
+
+            InputStream fileStream = new ByteArrayInputStream(Base64.decodeBase64(fileBytes));
+            s3Client.putObject(putObjectRequest,
+                    RequestBody.fromInputStream(fileStream, fileStream.available()));
 
             GetUrlRequest getUrlRequest = GetUrlRequest.builder().bucket(S3_BUCKET_NAME).key(key).build();
             String imageUrl = s3Client.utilities().getUrl(getUrlRequest).toString();
             subsegment.putAnnotation("Image URL", imageUrl);
 
-            LOGGER.info("Image uploaded to S3");
+            LOGGER.info("Image uploaded to S3: {}", imageUrl);
 
             return imageUrl;
         } catch (Exception e) {
