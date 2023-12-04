@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -49,19 +50,19 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
             LOGGER.info("body: {}", GSON.toJson(event.getBody()));
 
             DynamoDbClient client = DynamoDbClient.builder()
-                     .overrideConfiguration(ClientOverrideConfiguration.builder()
-                             .addExecutionInterceptor(new TracingInterceptor())
-                             .build())
-                     .build();
+                    .overrideConfiguration(ClientOverrideConfiguration.builder()
+                            .addExecutionInterceptor(new TracingInterceptor())
+                            .build())
+                    .build();
 
             String tableName = System.getenv("TABLE_NAME");
-            ScanResponse imagesResponse = client.scan(ScanRequest.builder().tableName(tableName).attributesToGet("url").build());
-            List<String> listOfImages = imagesResponse.items().stream().flatMap(m -> m.values().stream().map(AttributeValue::s)).collect(Collectors.toList());
+            ScanResponse imagesResponse = client.scan(ScanRequest.builder().tableName(tableName).build());
+            List<Image> images = imagesResponse.items().stream().map(this::convert).toList();
 
             response = new APIGatewayProxyResponseEvent().withStatusCode(200)
                     .withHeaders(HEADERS)
                     .withIsBase64Encoded(false)
-                    .withBody(GSON.toJson(listOfImages));
+                    .withBody(GSON.toJson(images));
 
         } catch (Exception e) {
             subsegment.addException(e);
@@ -72,19 +73,12 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         return response;
     }
 
-    private String getUserFromEvent(APIGatewayProxyRequestEvent event) {
-        var userName = "unknown";
-        var authorizer = event.getRequestContext().getAuthorizer();
-        if (authorizer == null) {
-            LOGGER.warn("null authorizer - cannot determine username");
-            return userName;
-        }
-        var claims = (Map<String, String>) authorizer.get("claims");
-        if (claims == null) {
-            LOGGER.warn("no JWT in authorizer - cannot determine username");
-            return userName;
-        }
-        return claims.get("cognito:username");
+    private Image convert(Map<String, AttributeValue> attributes) {
+        return new Image(
+                attributes.get("key").s(),
+                attributes.get("url").s(),
+                Optional.ofNullable(attributes.get("description")).map(AttributeValue::s).orElse("")
+        );
     }
 
 }

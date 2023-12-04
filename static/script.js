@@ -7,7 +7,7 @@ $(document).ready(function () {
   get("https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/images", function (data) {
     data.forEach((image) => {
       const imageObject = {
-        url: image
+        url: image.url
       };
       allImages.push(imageObject);
       imagesToDisplay.push(imageObject);
