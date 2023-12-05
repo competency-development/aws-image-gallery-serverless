@@ -7,7 +7,9 @@ $(document).ready(function () {
   get("https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/images", function (data) {
     data.forEach((image) => {
       const imageObject = {
-        url: image.url
+        url: image.url,
+        description: image.description,
+        key: image.key
       };
       allImages.push(imageObject);
       imagesToDisplay.push(imageObject);
@@ -54,23 +56,25 @@ $(document).ready(function () {
 
   function showDescription() {
     const parent = $(this).closest(".image-card");
-    const dataToSend = {
-      imageKey: "<paste_image_key>"
-    }
-    post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/recognize', dataToSend, function (data) {
-      parent.find(".hover-buttons").toggle();
-      const description = parent.find(".description");
-      description.addClass("appear-animation").toggle();
-      description.find('.description-text').text(data);
+    const dataToSend = parent[0] ? parent[0].id : '';
+    post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/recognize', "application/x-www-form-urlencoded", dataToSend, function (data) {
+      setTextToDescription(parent, data);
     });
   }
 
-  function post(url, dataToSend, callback) {
+  function setTextToDescription(parent, data) {
+    parent.find(".hover-buttons").toggle();
+    const description = parent.find(".description");
+    description.addClass("appear-animation").toggle();
+    description.find('.description-text').text(data.replaceAll(", ", " "));
+  }
+
+  function post(url, contentType, dataToSend, callback) {
     const fetchOptions = {
       method: "POST",
       body: dataToSend, // in comparison with Spring server, where we send with FormData - we are sending the file/object directly with serverless implementation
       headers: {
-        "Content-type": "multipart/form-data"
+        "Content-type": contentType
       }
     };
     fetch(url, fetchOptions)
@@ -83,11 +87,9 @@ $(document).ready(function () {
 
   function openPlayer() {
     const parent = $(this).closest(".image-card");
-    const dataToSend = {
-      imageKey: "<paste_image_key>"
-    }
-    post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/recognize', dataToSend, function (data) {
-      post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/synthesize', data, function (audio) {
+    const dataToSend = parent[0] ? parent[0].id : '';
+    post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/recognize', "application/x-www-form-urlencoded", dataToSend, function (data) {
+      post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/synthesize', "application/x-www-form-urlencoded", data, function (audio) {
         parent.find(".hover-buttons").toggle();
         parent.find('.audio').addClass('appear-animation').append('<audio id="audio" src="' + audio.body + '" controls></audio>').toggle();
       });
@@ -136,13 +138,13 @@ $(document).ready(function () {
   $("#upload-file-input").on("change", function () {
     const file = $(this).prop("files")[0];
     const url = "https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/images/upload";
-    post(url, file, function (data) {
+    post(url, "multipart/form-data", file, function (data) {
       const fileName = { fileName: file.name };
 
-      let alertTemplate = $("#upload-alert-template").html();
+      const alertTemplate = $("#upload-alert-template").html();
       $(".header").prepend(Mustache.render(alertTemplate, fileName));
 
-      let template = $("#image-card-template").html();
+      const template = $("#image-card-template").html();
       $(".row").prepend(Mustache.render(template, data));
       bindAllActions();
     });
