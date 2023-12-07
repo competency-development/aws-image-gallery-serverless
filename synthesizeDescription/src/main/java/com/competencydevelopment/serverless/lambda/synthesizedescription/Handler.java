@@ -8,6 +8,9 @@ import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.AWSXRayRecorderBuilder;
 import com.amazonaws.xray.entities.Subsegment;
 import com.amazonaws.xray.strategy.sampling.AllSamplingStrategy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -35,6 +38,9 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
     private static final Logger LOGGER = LoggerFactory.getLogger(Handler.class);
     private static final Map<String, String> HEADERS = new HashMap<>();
 
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+
     static {
         HEADERS.put("Content-Type", "application/json");
         HEADERS.put("Access-Control-Allow-Origin", "*");
@@ -46,17 +52,32 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent event, Context context) {
-        String text = new JSONObject(event.getBody()).getString("text");
-        InputStream audioStream = synthesize(text);
+        Subsegment subsegment = AWSXRay.beginSubsegment("synthesize image description");
+        APIGatewayProxyResponseEvent response;
+        try {
+            LOGGER.info("Environment: {}", GSON.toJson(System.getenv()));
+            LOGGER.info("Event: {}", GSON.toJson(event));
+            LOGGER.info("body: {}", GSON.toJson(event.getBody()));
 
-        String audioName = RandomStringUtils.randomAlphanumeric(24) + ".mp3";
+            String text = new String(Base64.decodeBase64(event.getBody()));
+            InputStream audioStream = synthesize(text);
 
-        String audioUrl = saveAudioToS3(audioName, audioStream);
+            String audioName = RandomStringUtils.randomAlphanumeric(24) + ".mp3";
 
-        return new APIGatewayProxyResponseEvent().withStatusCode(200)
-                .withHeaders(HEADERS)
-                .withIsBase64Encoded(false)
-                .withBody(audioUrl);
+            String audioUrl = saveAudioToS3(audioName, audioStream);
+
+            response = new APIGatewayProxyResponseEvent().withStatusCode(200)
+                    .withHeaders(HEADERS)
+                    .withIsBase64Encoded(false)
+                    .withBody(GSON.toJson(audioUrl));
+        } catch (Exception e) {
+            subsegment.addException(e);
+            throw e;
+        } finally {
+            AWSXRay.endSubsegment();
+        }
+        return response;
+
     }
 
     private String saveAudioToS3(String key, InputStream audioStream) {
