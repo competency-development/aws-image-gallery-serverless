@@ -91,7 +91,7 @@ $(document).ready(function () {
     post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/recognize', "application/x-www-form-urlencoded", dataToSend, function (data) {
       post('https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/synthesize', "application/x-www-form-urlencoded", data, function (audio) {
         parent.find(".hover-buttons").toggle();
-        parent.find('.audio').addClass('appear-animation').append('<audio id="audio" src="' + audio.body + '" controls></audio>').toggle();
+        parent.find('.audio').addClass('appear-animation').append('<audio id="audio" src="' + audio + '" controls></audio>').toggle();
       });
     });
   }

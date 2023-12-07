@@ -18,10 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.polly.PollyClient;
-import software.amazon.awssdk.services.polly.model.OutputFormat;
-import software.amazon.awssdk.services.polly.model.SynthesizeSpeechRequest;
-import software.amazon.awssdk.services.polly.model.SynthesizeSpeechResponse;
-import software.amazon.awssdk.services.polly.model.VoiceId;
+import software.amazon.awssdk.services.polly.model.*;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -62,6 +59,8 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
             String text = new String(Base64.decodeBase64(event.getBody()));
             InputStream audioStream = synthesize(text);
 
+            LOGGER.info("Polly answer available bytes {}", audioStream.available());
+
             String audioName = RandomStringUtils.randomAlphanumeric(24) + ".mp3";
 
             String audioUrl = saveAudioToS3(audioName, audioStream);
@@ -72,7 +71,7 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
                     .withBody(GSON.toJson(audioUrl));
         } catch (Exception e) {
             subsegment.addException(e);
-            throw e;
+            throw new RuntimeException(e);
         } finally {
             AWSXRay.endSubsegment();
         }
@@ -105,18 +104,17 @@ public class Handler implements RequestHandler<APIGatewayProxyRequestEvent, APIG
         }
     }
 
-    private ResponseInputStream<SynthesizeSpeechResponse> synthesize(String text) {
+    private InputStream synthesize(String text) {
         Subsegment subsegment = AWSXRay.beginSubsegment("Synthesize audio");
         subsegment.putAnnotation("Text", text);
 
         try (PollyClient polly = PollyClient.builder().build()) {
             SynthesizeSpeechRequest synthReq = SynthesizeSpeechRequest.builder()
                     .text(text)
-                    .voiceId(VoiceId.DORA)
+                    .voiceId(VoiceId.EMMA)
                     .outputFormat(OutputFormat.MP3)
                     .build();
-
-            return polly.synthesizeSpeech(synthReq);
+            return polly.synthesizeSpeechAsBytes(synthReq).asInputStream();
         } catch (Exception e) {
             subsegment.addException(e);
             throw e;
