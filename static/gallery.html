@@ -86,6 +86,7 @@
           <div class="hover-buttons">
             <button class="info-button"><i class="fas fa-info-circle"></i></button>
             <button class="play-button"><i class="fas fa-play"></i></button>
+            <button hidden class="delete-button"><i class="fas fa-trash-alt"></i></button>
           </div>
           <div class="description">
             <p class="description-text">{{description}}</p>
@@ -98,6 +99,18 @@
     <script id="upload-alert-template" type="x-tmpl-mustache">
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         File "{{fileName}}" was uploaded.
+        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </script>
+    <script id="delete-alert-template" type="x-tmpl-mustache">
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        File "{{fileName}}" was removed.
+        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </script>
+    <script id="error-alert-template" type="x-tmpl-mustache">
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        Unexpected error: "{{message}}".
         <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
       </div>
     </script>

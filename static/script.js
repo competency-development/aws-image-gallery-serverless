@@ -28,7 +28,7 @@ $(document).ready(function () {
       .then((response) => response.json())
       .then((data) => callback(data))
       .catch((error) => {
-        console.error("Error GET:", error);
+        showErrorNotification(error.message);
       });
   }
 
@@ -49,6 +49,7 @@ $(document).ready(function () {
     $(".image").unbind("click").on("click", bindExpandedImage);
     $(".info-button").unbind("click").on("click", showDescription);
     $(".play-button").unbind("click").on("click", openPlayer);
+    $(".delete-button").unbind("click").on("click", deleteImage);
 
     hideAppearingElements();
     bindForMobileDevices();
@@ -81,7 +82,7 @@ $(document).ready(function () {
       .then((response) => response.json())
       .then((data) => callback(data))
       .catch((error) => {
-        console.error("Error POST:", error);
+        showErrorNotification(error.message);
       });
   }
 
@@ -139,16 +140,42 @@ $(document).ready(function () {
     const file = $(this).prop("files")[0];
     const url = "https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/images/upload";
     post(url, "multipart/form-data", file, function (data) {
-      const fileName = { fileName: file.name };
-
-      const alertTemplate = $("#upload-alert-template").html();
-      $(".header").prepend(Mustache.render(alertTemplate, fileName));
-
+      showSuccessUploadNotification(file.name);
       const template = $("#image-card-template").html();
       $(".row").prepend(Mustache.render(template, data));
       bindAllActions();
     });
   });
+
+  function deleteImage() {
+    const parent = $(this).closest(".image-card");
+    const dataToSend = parent[0] ? parent[0].id : '';
+    post("https://uw47difk8j.execute-api.eu-central-1.amazonaws.com/images/delete", "multipart/form-data", dataToSend, function (data) {
+      parent.addClass("delete-animation");
+      setTimeout(function () {
+        parent.remove();
+        showSuccessDeleteNotification(data);
+      }, 500);
+    });
+  }
+
+  function showSuccessUploadNotification(fileNameText) {
+    const templateData = { fileName: fileNameText };
+    const alertTemplate = $("#upload-alert-template").html();
+    $(".header").prepend(Mustache.render(alertTemplate, templateData));
+  }
+
+  function showSuccessDeleteNotification(fileNameText) {
+    const templateData = { fileName: fileNameText };
+    const alertTemplate = $("#delete-alert-template").html();
+    $(".header").prepend(Mustache.render(alertTemplate, templateData));
+  }
+
+  function showErrorNotification(errorMessage) {
+    const templateData = { message: errorMessage };
+    const alertTemplate = $("#error-alert-template").html();
+    $(".header").prepend(Mustache.render(alertTemplate, templateData));
+  }
 
   $("#load-more").on("click", function (event) {
     event.preventDefault();
